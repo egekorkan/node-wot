@@ -1,0 +1,15 @@
+{
+  "name": "td-based-tester",
+  "version": "1.0.0",
+  "description": "get a thing description and test its related thing",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "thing-description",
+    "testing"
+  ],
+  "author": "egekorkan",
+  "license": "ISC"
+}

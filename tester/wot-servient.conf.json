@@ -1,0 +1,9 @@
+{
+    "servient": {
+        "scriptDir": false,
+        "scriptAction": true
+    },
+    "http": {
+        "port": 8083
+    }
+}
