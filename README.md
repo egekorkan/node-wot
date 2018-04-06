@@ -6,24 +6,31 @@ Build:
 
 ## License
 
-MIT License
+W3C Software License
+
+## Prerequisites
+
+On Linux, install lerna
+```
+npm install -g lerna
+```
+
+On Windows, install the build tools and lerna (CMD shell as administrator)
+```
+npm install --global --production windows-build-tools -g lerna 
+```
 
 ## How to get ready for coding
 
 ```
 # Clone the repository
-$ git clone https://github.com/thingweb/node-wot
+git clone https://github.com/thingweb/node-wot
 
 # Go into the repository
-$ cd node-wot
+cd node-wot
 
 # install root dependencies (locally installs tools like typescript and lerna)
 npm install 
-
-# WORKAROUND FOR WINDOWS: build bin files (bug in Lerna/NPM)
-# cd packages/node-wot
-# tsc
-# cd ../..
 
 # bootstrap the packages (installs dependencies and links the inter-dependencies)
 # Note: This step is automatically done on building or testing
@@ -49,6 +56,13 @@ Run all the steps above and then run this:
 ```
 cd examples/scripts
 wot-servient
+
+
+# e.g., Windows CMD shell (Counter Example)
+# expose
+# node packages\cli\dist\cli.js  examples\scripts\counter.js
+# consume
+# node packages\cli\dist\cli.js  examples\scripts\counterClient.js
 ```
 
 * go to http://localhost:8080/counter and you'll find a thing description.
@@ -58,11 +72,68 @@ wot-servient
 
 ## How to use the library
 
-This library implements the Scripting API defined in the [WoT Current Practices](https://w3c.github.io/wot/current-practices/wot-practices.html#scripting-api) document. 
+This library implements the WoT Scripting API
+
+* [First Public Working Draft](https://www.w3.org/TR/2017/WD-wot-scripting-api-20170914/) in [release v0.3.0](https://github.com/thingweb/node-wot/releases/tag/v0.3.0)
+  * Note: There are known differences between node-wot and FPWD (see [Issue72](https://github.com/w3c/wot-scripting-api/issues/72)).
+* [Editors Draft](w3c.github.io/wot-scripting-api/) in [master](https://github.com/thingweb/node-wot)
 
 You can also see _examples/scripts_ to have a feeling of how to script a Thing.
 
-Not everything has been succesfully implemented.
+<!---
+### Implemented/supported
+
+* [`WoT`](https://www.w3.org/TR/2017/WD-wot-scripting-api-20170914/#the-wot-object) object
+  * `discover` :heavy_multiplication_x:
+  * `consume` :heavy_check_mark:
+  * `expose` :heavy_check_mark:
+  
+* [`ConsumedThing`](https://www.w3.org/TR/2017/WD-wot-scripting-api-20170914/#the-consumedthing-interface) interface
+  * `invokeAction` :heavy_check_mark:
+  * `setProperty` :heavy_check_mark:
+  * `getProperty` :heavy_check_mark:
+  
+  * `addListener` :heavy_multiplication_x:
+  * `removeListener` :heavy_multiplication_x:
+  * `removeAllListeners` :heavy_multiplication_x:
+  * `observe` :heavy_multiplication_x:
+
+* [`ExposedThing`](https://www.w3.org/TR/2017/WD-wot-scripting-api-20170914/#the-exposedthing-interface) interface
+  * `addProperty` :heavy_check_mark:
+  * `removeProperty` :heavy_check_mark:
+  * `addAction` :heavy_check_mark:
+  * `removeAction` :heavy_check_mark:
+  * `addEvent` :heavy_check_mark:
+  * `removeEvent` :heavy_check_mark:
+  
+  * `onRetrieveProperty` :heavy_check_mark:
+  * `onUpdateProperty` :heavy_check_mark:
+  * `onInvokeAction` :heavy_check_mark:
+  * `onObserve` :heavy_multiplication_x:
+  
+  * `register` :heavy_multiplication_x:
+  * `unregister` :heavy_multiplication_x:
+  * `start` :heavy_multiplication_x:
+  * `stop` :heavy_multiplication_x:
+  * `emitEvent` :heavy_multiplication_x:
+-->
+
+#### Protocol Support
+
+* HTTP :heavy_check_mark:
+* HTTPS :question: ?fix needed?
+* CoAP :heavy_check_mark:
+* CoAPS :heavy_multiplication_x:
+* Websocket :heavy_multiplication_x:
+
+Note: More protocols can be easily added by implementing `ProtocolClient`, `ProtocolClientFactory` and `ProtocolServer` interface.
+
+#### MediaType Support
+
+* JSON  :heavy_check_mark:
+* plainText :heavy_check_mark:
+
+Note: More mediaTyes can be easily added by implementing `ContentCodec` interface.
 
 ## Logging
 

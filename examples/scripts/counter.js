@@ -1,41 +1,70 @@
- //just an example script - to be moved into other repo
+//just an example script - to be moved into other repo
+const NAME_PROPERTY_COUNT = "count";
+const NAME_ACTION_INCREMENT = "increment";
+const NAME_ACTION_DECREMENT = "decrement";
+const NAME_ACTION_RESET = "reset";
 
- WoT.createThing("counter")
-    .then(function(thing) {
-        console.log("created " + thing.name);
+let thing = WoT.produce({
+    name: "counter"
+});
 
-        thing
-        .addProperty("count", { type: "integer" })
-        .setProperty("count",0);
-        
-        thing
-        .onUpdateProperty("count",
-            function(newValue, oldValue) {
-                console.log(oldValue + " -> " + newValue);
-                var message = (oldValue < newValue)? "increased " : "decreased";
-                console.log("counter " + message + " to " + newValue);
-            }
-         );
+console.log("Created thing " + thing.name);
 
-         thing
-         .addAction("increment")
-         .onInvokeAction("increment", function() {
-            console.log("incrementing counter");
-            return thing.getProperty("count").then(function(count){
-                var value = count + 1;
-                thing.setProperty("count", value);
-                return value;
-            })
-         });
+thing.addProperty({
+	name : NAME_PROPERTY_COUNT,
+	schema : '{ "type": "number"}',
+	value : 0,
+	observable : true,
+	writeable : true
+})
 
-        thing
-        .addAction("decrement")
-        .onInvokeAction("decrement", function() {
-             console.log("decrementing counter");
-             return thing.getProperty("count").then(function(count){
-                var value = count - 1;
-                thing.setProperty("count", value);
-                return value;
-            })
-        });
-    });
+thing.setPropertyWriteHandler( 
+	NAME_PROPERTY_COUNT,
+	(value) => {
+		console.log("Setting '" + NAME_PROPERTY_COUNT + "' value to " + value);
+	}
+);
+
+thing.addAction({
+    name : NAME_ACTION_INCREMENT
+})
+
+thing.addAction({
+    name : NAME_ACTION_DECREMENT
+})
+
+thing.addAction({
+    name : NAME_ACTION_RESET
+})
+
+thing.setActionHandler( 
+	NAME_ACTION_RESET,
+	(parameters) => {
+		console.log("Resetting");
+		thing.writeProperty(NAME_PROPERTY_COUNT, 0);
+	}
+);
+
+thing.setActionHandler(
+	NAME_ACTION_INCREMENT,
+	(parameters) => {
+		console.log("Incrementing");
+		return thing.readProperty(NAME_PROPERTY_COUNT).then(function(count){
+			let value = count + 1;
+			thing.writeProperty(NAME_PROPERTY_COUNT, value);
+		});
+	}
+);
+
+thing.setActionHandler(
+	NAME_ACTION_DECREMENT,
+	(parameters) => {
+		console.log("Decrementing");
+		return thing.readProperty(NAME_PROPERTY_COUNT).then(function(count){
+			let value = count - 1;
+			thing.writeProperty(NAME_PROPERTY_COUNT, value);
+		});
+	}
+);
+
+thing.start();

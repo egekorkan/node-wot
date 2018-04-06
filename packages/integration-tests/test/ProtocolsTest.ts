@@ -7,12 +7,12 @@ import { expect, should } from "chai";
 // should must be called to augment all variables
 should();
 
-import HttpServer from "node-wot-protocols-http-server";
-import CoapServer from "node-wot-protocols-coap-server"; 
-import {AssetResourceListener} from "node-wot-protocols";
-
 import * as http from "http";
 import * as rp from "request-promise";
+
+import { AssetResourceListener } from "@node-wot/core";
+import { HttpServer } from "@node-wot/binding-http";
+import { CoapServer } from "@node-wot/binding-coap";
 
 const coap = require("coap");
 
@@ -25,8 +25,8 @@ class ProtocolsTest {
 
         let asset = new AssetResourceListener("test");
 
-        httpServer.addResource("/", asset );
-        coapServer.addResource("/", asset );
+        httpServer.addResource("/", asset);
+        coapServer.addResource("/", asset);
         
         httpServer.start();
         coapServer.start();
