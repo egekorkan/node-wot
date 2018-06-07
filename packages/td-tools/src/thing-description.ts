@@ -1,21 +1,17 @@
-/*
- * W3C Software License
- *
- * Copyright (c) 2018 the thingweb community
- *
- * THIS WORK IS PROVIDED "AS IS," AND COPYRIGHT HOLDERS MAKE NO REPRESENTATIONS OR
- * WARRANTIES, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO, WARRANTIES OF
- * MERCHANTABILITY OR FITNESS FOR ANY PARTICULAR PURPOSE OR THAT THE USE OF THE
- * SOFTWARE OR DOCUMENT WILL NOT INFRINGE ANY THIRD PARTY PATENTS, COPYRIGHTS,
- * TRADEMARKS OR OTHER RIGHTS.
- *
- * COPYRIGHT HOLDERS WILL NOT BE LIABLE FOR ANY DIRECT, INDIRECT, SPECIAL OR
- * CONSEQUENTIAL DAMAGES ARISING OUT OF ANY USE OF THE SOFTWARE OR DOCUMENT.
- *
- * The name and trademarks of copyright holders may NOT be used in advertising or
- * publicity pertaining to the work without specific, written prior permission. Title
- * to copyright in this work will at all times remain with copyright holders.
- */
+/********************************************************************************
+ * Copyright (c) 2018 Contributors to the Eclipse Foundation
+ * 
+ * See the NOTICE file(s) distributed with this work for additional
+ * information regarding copyright ownership.
+ * 
+ * This program and the accompanying materials are made available under the
+ * terms of the Eclipse Public License v. 2.0 which is available at
+ * http://www.eclipse.org/legal/epl-2.0, or the W3C Software Notice and
+ * Document License (2015-05-13) which is available at
+ * https://www.w3.org/Consortium/Legal/2015/copyright-software-and-document.
+ * 
+ * SPDX-License-Identifier: EPL-2.0 OR W3C-20150513
+ ********************************************************************************/
 
 // global W3C WoT Scripting API definitions
 import WoT from "wot-typescript-definitions";
@@ -72,8 +68,7 @@ export class InteractionForm {
  */
 export class Interaction {
   /** @ type information of the Interaction */
-  /* TODO Should be public semanticType: Array<WoT.SemanticType>; */
-  public semanticType: Array<string>;
+  public semanticType: Array<WoT.SemanticType>;
 
   public metadata: Array<WoT.SemanticMetadata>;
 
@@ -100,7 +95,7 @@ export class Interaction {
   public outputSchema: any;
 
   constructor() {
-    this.semanticType = [];
+    this.semanticType = []; // semanticType is subset of @type (without Pattern)
     this.metadata = [];
     this.form = [];
   }
@@ -122,7 +117,7 @@ export class PrefixedContext {
 export default class Thing {
 
   /** @context information of the TD */
-  public context: Array<string | object>
+  public context: Array<string | object>;
 
   /** @ type information, usually 'Thing' */
   public semanticType: Array<WoT.SemanticType>;
@@ -137,7 +132,7 @@ export default class Thing {
   public id: string;
 
   /** security metadata */
-  public security: Object;
+  public security: Array<object>;
 
   /** base URI of the Interaction resources */
   public base?: string;
@@ -148,43 +143,9 @@ export default class Thing {
   /** Web links to other Things or metadata */
   public link?: Array<any>;
 
-  /*
-  public getSimpleContexts(): Array<string> {
-    // @DAPE: Shall we cache created list?
-    let contexts: Array<string> = [];
-    if (this.context != null) {
-      for (let cnt of this.context) {
-        if (typeof cnt == "string") {
-          let c: string = cnt as string;
-          contexts.push(c);
-        }
-      }
-    }
-    return contexts;
-  }
-
-  public getPrefixedContexts(): Array<PrefixedContext> {
-    // @DAPE: Shall we cache created list?
-    let contexts: Array<PrefixedContext> = [];
-    if (this.context != null) {
-      for (let cnt of this.context) {
-        if (typeof cnt == "object") {
-          let c: any = cnt as any;
-          let keys = Object.keys(c);
-          for (let pfx of keys) {
-            let v = c[pfx];
-            contexts.push(new PrefixedContext(pfx, v));
-          }
-        }
-      }
-    }
-    return contexts;
-  }
-  */
-
   constructor() {
     this.context = [DEFAULT_HTTPS_CONTEXT];
-    this.semanticType = []; // DEFAULT_THING_TYPE
+    this.semanticType = []; // semanticType is subset of @type (without "Thing")
     this.metadata = [];
     this.interaction = [];
     this.link = []

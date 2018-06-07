@@ -1,21 +1,17 @@
-/*
- * W3C Software License
- *
- * Copyright (c) 2018 the thingweb community
- *
- * THIS WORK IS PROVIDED "AS IS," AND COPYRIGHT HOLDERS MAKE NO REPRESENTATIONS OR
- * WARRANTIES, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO, WARRANTIES OF
- * MERCHANTABILITY OR FITNESS FOR ANY PARTICULAR PURPOSE OR THAT THE USE OF THE
- * SOFTWARE OR DOCUMENT WILL NOT INFRINGE ANY THIRD PARTY PATENTS, COPYRIGHTS,
- * TRADEMARKS OR OTHER RIGHTS.
- *
- * COPYRIGHT HOLDERS WILL NOT BE LIABLE FOR ANY DIRECT, INDIRECT, SPECIAL OR
- * CONSEQUENTIAL DAMAGES ARISING OUT OF ANY USE OF THE SOFTWARE OR DOCUMENT.
- *
- * The name and trademarks of copyright holders may NOT be used in advertising or
- * publicity pertaining to the work without specific, written prior permission. Title
- * to copyright in this work will at all times remain with copyright holders.
- */
+/********************************************************************************
+ * Copyright (c) 2018 Contributors to the Eclipse Foundation
+ * 
+ * See the NOTICE file(s) distributed with this work for additional
+ * information regarding copyright ownership.
+ * 
+ * This program and the accompanying materials are made available under the
+ * terms of the Eclipse Public License v. 2.0 which is available at
+ * http://www.eclipse.org/legal/epl-2.0, or the W3C Software Notice and
+ * Document License (2015-05-13) which is available at
+ * https://www.w3.org/Consortium/Legal/2015/copyright-software-and-document.
+ * 
+ * SPDX-License-Identifier: EPL-2.0 OR W3C-20150513
+ ********************************************************************************/
 
 import Servient from "./servient"
 import ExposedThing from "./exposed-thing"
@@ -33,12 +29,18 @@ export function generateTD(thing: ExposedThing, servient: Servient): Thing {
 
   // FIXME necessary to create a copy? security and binding data needs to be filled in...
   // Could pass Thing data and binding data separately to serializeTD()?
+  // Due to missing deep copy, the genTD copy is quite worthless
   let genTD: Thing = new Thing();
+  genTD.context = thing.context.slice(0);
   genTD.semanticType = thing.semanticType.slice(0);
   genTD.name = thing.name;
   genTD.id = thing.id;
   // TODO security
-  genTD.security = [{ description: "node-wot development Servient, no security" }];
+  if (thing.security) {
+    genTD.security = thing.security;
+  } else {
+    genTD.security = [{ description: "node-wot development Servient, no security" }];
+  }
   genTD.metadata = thing.metadata.slice(0);
   genTD.interaction = thing.interaction.slice(0); // FIXME: not a deep copy
   genTD.link = thing.link.slice(0); // FIXME: not a deep copy
@@ -57,16 +59,20 @@ export function generateTD(thing: ExposedThing, servient: Servient): Thing {
 
           /* if server is online !==-1 assign the href information */
           if (server.getPort() !== -1) {
-            let href: string = server.scheme + "://" + address + ":" + server.getPort() + "/" + thing.name;
+            let href: string = server.scheme + "://" + address + ":" + server.getPort() + "/" + encodeURIComponent(thing.name);
+            let pattern: string;
 
-            /* depending of the resource pattern, uri is constructed */
+            /* depending of the Interaction Pattern, uri is different */
             if (interaction.pattern === TD.InteractionPattern.Property) {
-              interaction.form.push(new TD.InteractionForm(href + "/properties/" + interaction.name, type));
+              pattern = "/properties/";
             } else if (interaction.pattern === TD.InteractionPattern.Action) {
-              interaction.form.push(new TD.InteractionForm(href + "/actions/" + interaction.name, type));
+              pattern = "/actions/";
             } else if (interaction.pattern === TD.InteractionPattern.Event) {
-              interaction.form.push(new TD.InteractionForm(href + "/events/" + interaction.name, type));
+              pattern = "/events/";
             }
+
+            interaction.form.push(new TD.InteractionForm(href + pattern + encodeURIComponent(interaction.name), type));
+
             console.debug(`generateTD() assigns href '${interaction.form[interaction.form.length - 1].href}' to Interaction '${interaction.name}'`);
           }
         }

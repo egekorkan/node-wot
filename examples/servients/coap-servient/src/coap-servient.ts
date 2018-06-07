@@ -1,21 +1,17 @@
-/*
- * W3C Software License
- *
- * Copyright (c) 2018 the thingweb community
- *
- * THIS WORK IS PROVIDED "AS IS," AND COPYRIGHT HOLDERS MAKE NO REPRESENTATIONS OR
- * WARRANTIES, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO, WARRANTIES OF
- * MERCHANTABILITY OR FITNESS FOR ANY PARTICULAR PURPOSE OR THAT THE USE OF THE
- * SOFTWARE OR DOCUMENT WILL NOT INFRINGE ANY THIRD PARTY PATENTS, COPYRIGHTS,
- * TRADEMARKS OR OTHER RIGHTS.
- *
- * COPYRIGHT HOLDERS WILL NOT BE LIABLE FOR ANY DIRECT, INDIRECT, SPECIAL OR
- * CONSEQUENTIAL DAMAGES ARISING OUT OF ANY USE OF THE SOFTWARE OR DOCUMENT.
- *
- * The name and trademarks of copyright holders may NOT be used in advertising or
- * publicity pertaining to the work without specific, written prior permission. Title
- * to copyright in this work will at all times remain with copyright holders.
- */
+/********************************************************************************
+ * Copyright (c) 2018 Contributors to the Eclipse Foundation
+ * 
+ * See the NOTICE file(s) distributed with this work for additional
+ * information regarding copyright ownership.
+ * 
+ * This program and the accompanying materials are made available under the
+ * terms of the Eclipse Public License v. 2.0 which is available at
+ * http://www.eclipse.org/legal/epl-2.0, or the W3C Software Notice and
+ * Document License (2015-05-13) which is available at
+ * https://www.w3.org/Consortium/Legal/2015/copyright-software-and-document.
+ * 
+ * SPDX-License-Identifier: EPL-2.0 OR W3C-20150513
+ ********************************************************************************/
 
 "use strict";
 
@@ -64,36 +60,53 @@ export default class MyServient extends Servient {
             super.start().then( WoT => {
                 console.info("MyServient started");
     
-                WoT.expose({ name: "servient" }).then(thing => {
+                let thing = WoT.produce({ name: "servient" });
     
+                thing
+                    .addAction({
+                        name: "log",
+                        inputSchema: `{ type: "string" }`,
+                        outputSchema: `{ type: "string" }`
+                    }).setActionHandler(
+                        "log",
+                        (msg: any) => {
+                            return new Promise((resolve, reject) => {
+                                console.info(msg);
+                                resolve(`logged '${msg}'`);
+                            });
+                        }
+                    )
+
+                    .addAction({
+                        name: "shutdown",
+                        outputSchema: `{ type: "string" }`
+                    }).setActionHandler(
+                        "shutdown",
+                        () => {
+                            return new Promise((resolve, reject) => {
+                                console.info("shutting down by remote");
+                                this.shutdown();
+                                resolve();
+                            });
+                        }
+                    );
+
+                if (this.config.servient.scriptAction) {
                     thing
-                        .addAction({ name: "log",
-                                    inputSchema: `{ type: "string" }`,
-                                    outputSchema: `{ type: "string" }`,
-                                    action: (msg: string) => {
-                                        console.info(msg);
-                                        return `logged '${msg}`;
-                                    }
-                                })
-                        .addAction({ name: "shutdown",
-                                    outputSchema: `{ type: "string" }`,
-                                    action: () => {
-                                        console.info("shutting down by remote");
-                                        this.shutdown();
-                                    }
+                        .addAction({
+                            name: "runScript",
+                            inputSchema: `{ type: "string" }`,
+                            outputSchema: `{ type: "string" }`
+                        }).setActionHandler(
+                            "runScript",
+                            (script: string) => {
+                                return new Promise((resolve, reject) => {
+                                    console.log("runnig script", script);
+                                    resolve(this.runScript(script));
                                 });
-    
-                    if (this.config.servient.scriptAction)
-                        thing
-                            .addAction({ name: "runScript",
-                                    inputSchema: `{ type: "string" }`,
-                                    outputSchema: `{ type: "string" }`,
-                                    action: (script: string) => {
-                                        console.log("runnig script", script);
-                                        return this.runScript(script);
-                                    }
-                                });
-                });
+                            }
+                        );
+                }
 
                 // pass WoTFactory on
                 resolve(WoT);

@@ -1,21 +1,17 @@
-/*
- * W3C Software License
- *
- * Copyright (c) 2018 the thingweb community
- *
- * THIS WORK IS PROVIDED "AS IS," AND COPYRIGHT HOLDERS MAKE NO REPRESENTATIONS OR
- * WARRANTIES, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO, WARRANTIES OF
- * MERCHANTABILITY OR FITNESS FOR ANY PARTICULAR PURPOSE OR THAT THE USE OF THE
- * SOFTWARE OR DOCUMENT WILL NOT INFRINGE ANY THIRD PARTY PATENTS, COPYRIGHTS,
- * TRADEMARKS OR OTHER RIGHTS.
- *
- * COPYRIGHT HOLDERS WILL NOT BE LIABLE FOR ANY DIRECT, INDIRECT, SPECIAL OR
- * CONSEQUENTIAL DAMAGES ARISING OUT OF ANY USE OF THE SOFTWARE OR DOCUMENT.
- *
- * The name and trademarks of copyright holders may NOT be used in advertising or
- * publicity pertaining to the work without specific, written prior permission. Title
- * to copyright in this work will at all times remain with copyright holders.
- */
+/********************************************************************************
+ * Copyright (c) 2018 Contributors to the Eclipse Foundation
+ * 
+ * See the NOTICE file(s) distributed with this work for additional
+ * information regarding copyright ownership.
+ * 
+ * This program and the accompanying materials are made available under the
+ * terms of the Eclipse Public License v. 2.0 which is available at
+ * http://www.eclipse.org/legal/epl-2.0, or the W3C Software Notice and
+ * Document License (2015-05-13) which is available at
+ * https://www.w3.org/Consortium/Legal/2015/copyright-software-and-document.
+ * 
+ * SPDX-License-Identifier: EPL-2.0 OR W3C-20150513
+ ********************************************************************************/
 
 import Thing from './thing-description';
 import * as TD from './thing-description';
@@ -65,13 +61,8 @@ function stringToThingDescription(tdJson: string): Thing {
                 if (typeEntry === TD.DEFAULT_THING_TYPE) {
                   // default, additional @types to "Thing" only
                 } else {
-                  let st: WoT.SemanticType = {
-                    name: typeEntry,
-                    context: "TODO"
-                    // ,
-                    // prefix: "p"
-                  };
-                  td.semanticType.push(st);
+                  let splitEntry = typeEntry.split(":");
+                  td.semanticType.push({ context: "", prefix: splitEntry[0], name: splitEntry[1] });
                 }
               }
             }
@@ -125,7 +116,17 @@ function stringToThingDescription(tdJson: string): Thing {
                         } else if (Array.isArray(interactionEntry[fieldNameInteraction])) {
                           for (let typeInteractionEntry of interactionEntry[fieldNameInteraction]) {
                             if (typeof typeInteractionEntry === "string") {
-                              inter.semanticType.push(typeInteractionEntry);
+
+                              let splitEntry = typeInteractionEntry.split(":");
+
+                              if (splitEntry.length==1) {
+                                if (typeInteractionEntry==="Property") inter.pattern = TD.InteractionPattern.Property;
+                                else if (typeInteractionEntry==="Action") inter.pattern = TD.InteractionPattern.Action;
+                                else if (typeInteractionEntry==="Event") inter.pattern = TD.InteractionPattern.Event;
+                                else inter.semanticType.push({ context: "", prefix: "", name: typeInteractionEntry });
+                              } else {
+                                inter.semanticType.push({ context: "", prefix: splitEntry[0], name: splitEntry[1] });
+                              }
                             } else {
                               console.error("interaction @type field not of type string");
                             }
@@ -196,17 +197,12 @@ function stringToThingDescription(tdJson: string): Thing {
                         }
                         break;
                       default: // metadata
-                        // TODO prefix/context parsing metadata
-                        let md: WoT.SemanticMetadata = {
-                          type: {
-                            name: fieldNameInteraction,
-                            context: "TODO"
-                            // ,
-                            // prefix: "p" 
-                          },
-                          value: interactionEntry[fieldNameInteraction]
-                        };
-                        inter.metadata.push(md);
+                        let splitEntry = fieldNameInteraction.split(":");
+                        if (splitEntry.length==1) {
+                          inter.metadata.push({ type: { name: fieldNameInteraction, context: "" }, value: interactionEntry[fieldNameInteraction] } );
+                        } else {
+                          inter.metadata.push({ type: { name: splitEntry[1], context: "", prefix: splitEntry[0] }, value: interactionEntry[fieldNameInteraction] } );
+                        }
                         break;
                     }
                   }
@@ -223,17 +219,12 @@ function stringToThingDescription(tdJson: string): Thing {
           td.link = tdPlain[fieldNameRoot];
           break;
         default: // metadata
-          // TODO prefix/context parsing metadata
-          let md: WoT.SemanticMetadata = {
-            type: {
-              name: fieldNameRoot,
-              context: "TODO"
-              // ,
-              // prefix: "p" 
-            },
-            value: tdPlain[fieldNameRoot]
-          };
-          td.metadata.push(md);
+          let splitEntry = fieldNameRoot.split(":");
+          if (splitEntry.length==1) {
+            td.metadata.push({ type: { name: fieldNameRoot, context: "" }, value: tdPlain[fieldNameRoot] } );
+          } else {
+            td.metadata.push({ type: { name: splitEntry[1], context: "", prefix: splitEntry[0] }, value: tdPlain[fieldNameRoot] } );
+          }
           break;
       }
     }
@@ -248,8 +239,8 @@ function thingDescriptionToString(td: Thing): string {
   // @context
   json["@context"] = td.context;
 
-  // @type + "Thing"
-  json["@type"] = [TD.DEFAULT_THING_TYPE];
+  // @type
+  json["@type"] = ["Thing"];
   for (let semType of td.semanticType) {
     json["@type"].push((semType.prefix ? semType.prefix + ":" : "") + semType.name);
   }
@@ -263,8 +254,8 @@ function thingDescriptionToString(td: Thing): string {
 
   // metadata
   for (let md of td.metadata) {
-    // TODO align with parsing method
-    json[md.type.name] = md.value;
+    let mdKey = (md.type.prefix ? md.type.prefix + ":" : "") + md.type.name;
+    json[mdKey] = md.value;
   }
 
   // security
@@ -286,17 +277,18 @@ function thingDescriptionToString(td: Thing): string {
         jsonInter.schema = inter.schema;
       }
       // writable
-      if(inter.writable == true) {
+      if(inter.writable === true) {
         jsonInter.writable = inter.writable;
       } else {
         jsonInter.writable = false;
       }
       // observable
-      if(inter.observable == true) {
+      if(inter.observable === true) {
         jsonInter.observable = inter.observable;
       } else {
         jsonInter.observable = false;
       }
+    
     } else if (inter.pattern == TD.InteractionPattern.Action) {
       jsonInter["@type"] = ["Action"];
       // schema
@@ -315,10 +307,14 @@ function thingDescriptionToString(td: Thing): string {
       }
     }
 
+    // custom @type
     for (let semType of inter.semanticType) {
-      //if(semType != "Property" && semType != "Action" && semType != "Event") {
-      jsonInter["@type"].push(semType);
-      //}
+      // fallback if script does not use WoT.SemanticType
+      if (typeof semType === "string") {
+        jsonInter["@type"].push(semType);
+      } else {
+        jsonInter["@type"].push((semType.prefix ? semType.prefix + ":" : "") + semType.name);
+      }
     }
 
     // form
@@ -340,8 +336,8 @@ function thingDescriptionToString(td: Thing): string {
 
     // metadata
     for (let md of inter.metadata) {
-      // TODO align with parsing method
-      jsonInter[md.type.name] = md.value;
+      let mdKey = (md.type.prefix ? md.type.prefix + ":" : "") + md.type.name;
+      jsonInter[mdKey] = md.value;
     }
 
     json.interaction.push(jsonInter);
@@ -363,29 +359,11 @@ export function parseTDString(json: string, normalize?: boolean): Thing {
   console.debug(`parseTDString() found ${td.interaction.length} Interaction${td.interaction.length === 1 ? '' : 's'}`);
   // for each interaction assign the Interaction type (Property, Action, Event)
   // and, if "base" is given, normalize each Interaction link
-  for (let interaction of td.interaction) {
+  
+  if (normalize == null || normalize) {
 
-    // moving Interaction Pattern information to 'pattern' field
-    let indexProperty = interaction.semanticType.indexOf(TD.InteractionPattern.Property.toString());
-    let indexAction = interaction.semanticType.indexOf(TD.InteractionPattern.Action.toString());
-    let indexEvent = interaction.semanticType.indexOf(TD.InteractionPattern.Event.toString());
-    if (indexProperty !== -1) {
-      console.debug(` * Property '${interaction.name}'`);
-      interaction.pattern = TD.InteractionPattern.Property;
-      interaction.semanticType.splice(indexProperty, 1);
-    } else if (indexAction !== -1) {
-      console.debug(` * Action '${interaction.name}'`);
-      interaction.pattern = TD.InteractionPattern.Action;
-      interaction.semanticType.splice(indexAction, 1);
-    } else if (indexEvent !== -1) {
-      console.debug(` * Event '${interaction.name}'`);
-      interaction.pattern = TD.InteractionPattern.Event;
-      interaction.semanticType.splice(indexEvent, 1);
-    } else {
-      console.error(`parseTDString() found no Interaction pattern`);
-    }
+    for (let interaction of td.interaction) {
 
-    if (normalize == null || normalize) {
       /* if a base uri is used normalize all relative hrefs in links */
       if (td.base !== undefined) {
 

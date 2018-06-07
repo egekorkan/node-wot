@@ -1,21 +1,17 @@
-/*
- * W3C Software License
- *
- * Copyright (c) 2018 the thingweb community
- *
- * THIS WORK IS PROVIDED "AS IS," AND COPYRIGHT HOLDERS MAKE NO REPRESENTATIONS OR
- * WARRANTIES, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO, WARRANTIES OF
- * MERCHANTABILITY OR FITNESS FOR ANY PARTICULAR PURPOSE OR THAT THE USE OF THE
- * SOFTWARE OR DOCUMENT WILL NOT INFRINGE ANY THIRD PARTY PATENTS, COPYRIGHTS,
- * TRADEMARKS OR OTHER RIGHTS.
- *
- * COPYRIGHT HOLDERS WILL NOT BE LIABLE FOR ANY DIRECT, INDIRECT, SPECIAL OR
- * CONSEQUENTIAL DAMAGES ARISING OUT OF ANY USE OF THE SOFTWARE OR DOCUMENT.
- *
- * The name and trademarks of copyright holders may NOT be used in advertising or
- * publicity pertaining to the work without specific, written prior permission. Title
- * to copyright in this work will at all times remain with copyright holders.
- */
+/********************************************************************************
+ * Copyright (c) 2018 Contributors to the Eclipse Foundation
+ * 
+ * See the NOTICE file(s) distributed with this work for additional
+ * information regarding copyright ownership.
+ * 
+ * This program and the accompanying materials are made available under the
+ * terms of the Eclipse Public License v. 2.0 which is available at
+ * http://www.eclipse.org/legal/epl-2.0, or the W3C Software Notice and
+ * Document License (2015-05-13) which is available at
+ * https://www.w3.org/Consortium/Legal/2015/copyright-software-and-document.
+ * 
+ * SPDX-License-Identifier: EPL-2.0 OR W3C-20150513
+ ********************************************************************************/
 
 import * as WoT from "wot-typescript-definitions";
 
@@ -36,19 +32,9 @@ interface ClientAndForm {
     form: TD.InteractionForm
 }
 
-export default class ConsumedThing implements TD.Thing, WoT.ConsumedThing {
+export default class ConsumedThing extends TD.Thing implements WoT.ConsumedThing {
 
     protected readonly td: WoT.ThingDescription;
-
-    public readonly context: (string | Object)[];
-    public readonly name: string;
-    public readonly id: string;
-    public readonly semanticType: Array<WoT.SemanticType>;
-    public readonly metadata: Array<WoT.SemanticMetadata>;
-    public readonly security: any;
-    public readonly interaction: TD.Interaction[];
-    public readonly link: Array<any>;
-
     protected readonly srv: Servient;
     private clients: Map<string, ProtocolClient> = new Map();
     protected observablesEvent: Map<string, Subject<any>> = new Map();
@@ -57,6 +43,8 @@ export default class ConsumedThing implements TD.Thing, WoT.ConsumedThing {
 
     constructor(servient: Servient, td: WoT.ThingDescription) {
 
+        super();
+        // asign containing Servient
         this.srv = servient;
         // cache original TD
         this.td = td;
@@ -69,12 +57,9 @@ export default class ConsumedThing implements TD.Thing, WoT.ConsumedThing {
         this.name = tdObj.name;
         this.id = tdObj.id;
         if (Array.isArray(tdObj.security) && tdObj.security.length>=1) {
-            if (tdObj.security.length > 1) {
-                console.warn(`ConsumedThing '${this.name}' received multiple security metadata entries, selecting first`)
-            }
-            this.security = tdObj.security[0];
-        } else {
             this.security = tdObj.security;
+        } else if (typeof tdObj.security === "object" ) {
+            this.security = [tdObj.security];
         }
         this.metadata = tdObj.metadata;
         this.interaction = tdObj.interaction;
@@ -113,7 +98,7 @@ export default class ConsumedThing implements TD.Thing, WoT.ConsumedThing {
             if (client) {
                 console.log(`ConsumedThing '${this.name}' got new client for '${schemes[srvIdx]}'`);
                 if (this.security) {
-                    console.warn("ConsumedThing applying security metadata");
+                    console.log("ConsumedThing applying security metadata");
                     //console.dir(this.security);
                     client.setSecurity(this.security, this.srv.getCredentials(this.id));
                 }
